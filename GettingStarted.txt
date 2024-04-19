@@ -1,0 +1,13 @@
+## Connect to environment
+Connect-VIServer -Server 'VC02.Domain.Local'
+
+## Retrieves blade info
+Get-VMHost
+
+
+## Retrieves a list of VMs with IP address
+Get-VM | Select Name, @{N="IP Address";E={@($_.guest.IPAddress[0])}}
+
+
+## Retrieves VM storage info
+Get-Datastore
