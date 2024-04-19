@@ -1,0 +1,29 @@
+Connect-VIServer -Server 'VC02.Domain.Local'
+
+$NewDataSet = @()
+$DataCenters = Get-DataCenter
+
+ForEach ($Datacenter in $DataCenters){
+    $VMHosts = Get-VMHost
+    $HostView = $VMHosts | Get-View
+
+    Foreach ($esxhost in $HostView){ 
+        $NewData = "" | Select Name, Version, Build, Cluster, Datacenter, "Service Console", VMKernel
+        $NewData.Name = $esxhost.name
+        $NewData.Version = $esxhost.config.product.version
+        $NewData.Build = $esxhost.config.product.build
+        $NewData.Cluster = (Get-Cluster -vmhost $esxhost.name).name
+        $NewData.Datacenter = $Datacenter
+
+        # Check if ConsoleVnic array exists and has elements
+        if ($esxhost.config.network.ConsoleVnic -ne $null -and $esxhost.config.network.ConsoleVnic.Count -gt 0) {
+            $NewData."Service Console" = $esxhost.config.network.ConsoleVnic[0].spec.ip.ipaddress
+        } else {
+            $NewData."Service Console" = "N/A"
+        }
+
+        $NewData.VMKernel = $esxhost.config.vmotion.ipconfig.IpAddress
+        $NewDataSet += $NewData
+    }
+}
+$NewDataSet
